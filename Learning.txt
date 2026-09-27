@@ -1,0 +1,38 @@
+Alright, working on this: there is a lot of ground to cover.
+
+I'm going to start with the basics, using a notepad with reference for the syntax, and then going
+through each one of the exercises, and what is required.
+
+First: .gitignore filed, added and we list node_modules to be excluded. 
+
+Second:
+    We need to return a hardcoded list of phonebook entries, so storing information which is fetched.
+    Essentially I think this is just altering our code in index.js, so that we have the phonebook array.
+
+    Each object is comprised of the following structure:
+        { 
+      "id": "1",
+      "name": "Arto Hellas", 
+      "number": "040-123456"
+    },
+    So we have an id, name, and number - this looks like JSON instead of an object though?
+
+    Alright so first thing first, we have the notes, but we need them to return on a GET request to
+    http://localhost:3001/api/persons
+    I just slightly altered the code here:
+    app.get('/api/persons', (request, response) => {
+    response.json(phonebook)
+})
+    I'm going to check what is happening line for line however and do a notes pass. 
+    Okay, yep, so using REST Client in VS here, I was able to get do GET http://localhost:3001/persons, which returned:
+    HTTP/1.1 200 Okay
+    X-Powered-By: Express
+    Content-Type: application/json; charset=utf-8
+    Content-Length: 231
+    ETag: Not sure what that is
+    Date: ---> okay so here is the date, so we can probably use this for the later exercise parts!
+    Connection: close --> Not sure what that is.
+    This was essentially a low effort component, as this code existed prior to me typing it, let me scan the relevant portions of the articles again.
+    Just for learning sake I tried to code the hardcoded http.createServer version, quickly learned it doesn't easily facilitate paths of the URL.
+     
+Coming back after a 5 day break - this is going to definitely be a rough start. 
