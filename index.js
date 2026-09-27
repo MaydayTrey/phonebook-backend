@@ -4,6 +4,8 @@ const app = express()                // app is an application object
 //So express is a factory function, which creates the application object. 
 const morgan = require('morgan')
 const cors = require('cors')
+app.use(express.static('dist'))
+
 
 morgan.token('requestBody', (request, response) => {
   return JSON.stringify(request.body)
