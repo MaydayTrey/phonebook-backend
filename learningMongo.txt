@@ -1,0 +1,127 @@
+//Learning Mongo and Mongoose:
+
+const mongoose = require('mongoose')
+
+if (process.argv.length < 3) {
+    console.log('give password as argument')
+    process.exit(1)
+}
+
+//What is process.argv? what is this process object?
+
+const password = process.argv[2]
+//It looks like this is an array of some type since we're saying the index
+// argv positional index 3; so ['something','something', password]?
+
+const url = 
+`mongodb+srv://sunwaver25_db_user:${password}@cluster0.v0r2wup.mongodb.net/?appName=Cluster0`
+//They made the password a string literal here, so I'm assuming argv is the db user data, which pulls out my password?
+
+mongoose.set('strictQuery', false)
+//No idea what strictQuery, but looks like you can set mongoose functional behavior
+
+mongoose.connect(url, { family: 4 })
+//Huh? this is connecting to the URL we specify, and passing in our user data over the URL? 
+//And then there is an object with family and set to 4, I've no idea what that it is. -- Restricts to IPv4
+
+const noteSchema = new mongoose.Schema({
+    content: String,
+    important: Boolean,
+})
+//Ahh this looks like the mongoose real use, setting a schema,
+//But we're attaching that schema to a noteSchema
+
+const Note = mongoose.model('Note', noteSchema)
+/*Filling in the blanks here, but I'd guess, that model
+means, that we are saying set the name of this model to note,
+but implement the noteSchema as our schema, and I'm assuming
+schema is essentially rules for the data shape.*/
+
+const note = new Note({
+    content: 'HTML is easy',
+    important: true,
+})
+
+//So we're using the new keyword, to say create a new instance of Note
+// We've given this particular one a variable name of note,
+//I wonder what happens if you don't adhere to schema? like if we had important set to a string or something
+//Or if we just totally lacked it?
+
+note.save().then(result => {
+    console.log(`note saved!`)
+    mongoose.connection.close()
+})
+
+//What is this .save method that has a .then chain?
+//And we have to hard code to close the connection it seems like
+//But what is it we are even connected too
+
+/*
+Reading the FSO doc:
+the mongoose.connect does establish connection with the DB.
+It takes the db URL as first arg, and an object that defines the required settings as the second
+MongoDB supports ONLY IPv4 addresses; so the object { family: 4 } sepcifies that the connection
+should always use IPv4.
+
+The practice app presumes the password is passed from the credentials we made
+"as a command line param, we can access the command line param like:
+const password = process.argv[2]"
+
+when running node mongo.js yourPassword;
+Mongo will add a new doc to the db;
+wait is process.argv the command line terminal prompts?
+
+Lets try it.. 
+*/
+
+
+/*
+FETCHING, the above code is supposed to be commented out, but considering it isn't working right now anyways, I will need to return to it.
+
+*/
+
+Note.find({}).then(result => {
+    result.forEach(note => {
+        console.log(note)
+    })
+    mongoose.connection.close()
+})
+//So this find, seems to find everything, and gives us a result
+//The result is supposedly from this code, an array.
+//We run a forEach which passes over each and logs the corresponding notes.
+
+/* find method of the Note model;
+This is a valid thing which I glossed over at first, 
+we are using the model we established, the construction which utilizies the schema we enforce,
+and we can run .find method on it, to get all that are of the construction result.
+
+The param of the method is an object expressing search conditions;
+since we give an empty object, we get all notes stored in the notes collection.
+The search conditions must adhere to the Mongo search query syntax;
+
+Note.find({ important: true }).then(result => {...})
+
+so:
+Model.find({ schemaProperty: value}).then({result => {...Process those that match the model and schema condition passed}})
+
+
+EXERCISES:
+3.12; Create a cloud based MongoDB DB for the phonebook app with MongoDB Atlas.
+A) Create a mongo.js file in the proj dir - add entries and list all entires
+    note: Don't include the password in the file you commit and push to GitHub (shheesh!)
+Example: node mongo.js yourpassword Anna 040-123...
+so we take in the password from the console, argv, argv[4] and argv[5] will be the name and password
+and then we need to print: added ${name}, number ${number} to phonebook
+The new entry to the phonebook will be saved to the DB, if it contains whitespace chars, must be encolsed in quotes
+(Restraint on us when entering it)
+If the password is the only param given; node mongo.js yourpassword
+then the program should display all of the entires;
+this looks like an if/elif branch on the argv which runs commands corresponding to the data entered, not that wild.
+--> Run the connection close, after the .then, so the callback gets utilized first, simple enough. Keep it in the same codeblock
+
+Oh wow there's a lot to these exercises, they are massive!
+we have to connect the backend to a DB then move the db to its own module, and it doens't even consider those separate exercises!
+
+(All of this will definitely take another 2 hours, so 2 hours just reading, then another 2 hours doing this - how the hell will I finish Part 3 today?)
+This was 1 hr 40min session, just to get this far, I will not stop though - just going to jump into the exercises, after I get back to apartment.)
+*/

@@ -1,8 +1,11 @@
+require('dotenv').config()
+
 const express = require('express')   // express is a function
 const app = express()                // app is an application object
 //So the application object is what .get, .post, and the other http methods exist in.
 //So express is a factory function, which creates the application object. 
 const morgan = require('morgan')
+const Person = require('./models/person')
 const cors = require('cors')
 app.use(express.static('dist'))
 
@@ -17,68 +20,54 @@ app.use(express.json())
 app.use(cors())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :requestBody'))
 
-
-
-let phonebook = [
-    { 
-      "id": "1",
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": "2",
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": "3",
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": "4",
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
-
-const generateID = () => String(Math.floor(Math.random() * 1000000));
-
-const createPerson = ({name, number}) => {
-    return {
-        name,
-        number,
-        id: generateID()
-    }
-}
-
-
 app.get('/', (request, response) => {
     response.send('<h1>Hello-World!</h1>')
 })
 
+//I think this is right, it's specifiying person is as the .models/persons which has an export default
+//That export default is:  mongoose.model('Person', personSchema)
 app.get('/api/persons', (request, response) => {
-    response.json(phonebook)
+    Person.find({}).then(persons => {
+        response.json(persons)
+    })
 })
+//So the above coude should find with no specification, all those which match person schema
 
 app.get('/api/info', (request, response) => {
-    const quantity = phonebook.length
-    const now = new Date()
-    response.send(`<p>Phonebook has info for ${quantity} people</p><p>${now}</p>`)
+    Person.countDocuments({}).then(quantity => {
+        const now = new Date()
+        response.send(`<p>Phonebook has info for ${quantity} people</p><p>${now}</p>`)
+    })
 })
 
-app.get('/api/persons/:id', (request, response) => {
-    const id = request.params.id
-    const person = phonebook.find(person => person.id === id)
-    response.json(person)
 
+
+app.get('/api/persons/:id', (request, response, next) => {
+    Person.findById(request.params.id)
+    .then(person => {
+        if(!person){
+            return response.status(404).end()
+        }
+        response.json(person)
+    })
+    .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = request.params.id
-    phonebook = phonebook.filter(person => person.id !== id)
+app.delete('/api/persons/:id', (request, response, next) => {
+    Person.findByIdAndDelete(request.params.id)
+    .then(personToDelete =>
+        response.status(204).end()
+    )
+    .catch(error => next(error))
+})
 
-    response.status(204).end() 
+app.put('/api/persons/:id', (request, response, next) => {
+    const number = request.body.number
+    Person.findByIdAndUpdate(request.params.id, { number }, { new: true })
+    .then(personUpdated =>
+        response.status(200).json(personUpdated)
+    )
+    .catch(error => next(error))
 })
 
 
@@ -93,15 +82,27 @@ app.post('/api/persons', (request, response) => {
     return response.status(400).json({ error: 'number missing' })
   }
 
-  if (phonebook.some(entry => entry.name === body.name)) {
-    return response.status(400).json({ error: 'name must be unique' })
-  }
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  })
 
-  const person = createPerson(body)
-  phonebook = phonebook.concat(person)
-  response.status(201).json(person)
+  person.save().then(savedPerson => {
+    response.status(201).json(savedPerson)
+  })
 })
 
+
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+  // check error.name here and respond appropriately
+  if(error.name === 'CastError'){
+    return response.status(400).json({ error: 'malformed id'})
+  }
+  next(error)
+}
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
