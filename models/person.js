@@ -6,7 +6,7 @@ const url = process.env.MONGODB_URI // I need to make this!
 
 console.log('connecting to', url)
 mongoose.connect(url, { family: 4 })
-    .then(result => {
+    .then(() => {
         console.log('connected to MongoDB')
     })
     .catch(error => {
@@ -16,8 +16,12 @@ mongoose.connect(url, { family: 4 })
 
 //Creates the person Schema
 const personSchema = new mongoose.Schema({
-    name: String,
-    number: String,
+  name: {
+    // options for the name field go here
+    type: String,
+    minLength: 3
+  },
+  number: String,
 })
 
 personSchema.set('toJSON', {

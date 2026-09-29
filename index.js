@@ -10,7 +10,7 @@ const cors = require('cors')
 app.use(express.static('dist'))
 
 
-morgan.token('requestBody', (request, response) => {
+morgan.token('requestBody', (request) => {
   return JSON.stringify(request.body)
 })
 
@@ -55,7 +55,7 @@ app.get('/api/persons/:id', (request, response, next) => {
 
 app.delete('/api/persons/:id', (request, response, next) => {
     Person.findByIdAndDelete(request.params.id)
-    .then(personToDelete =>
+    .then(() =>
         response.status(204).end()
     )
     .catch(error => next(error))
@@ -99,6 +99,8 @@ const errorHandler = (error, request, response, next) => {
   // check error.name here and respond appropriately
   if(error.name === 'CastError'){
     return response.status(400).json({ error: 'malformed id'})
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
   }
   next(error)
 }
